@@ -153,37 +153,37 @@ class INA23X:
     """
 
     # Configuration register bits
-    _reset = RWBit(_REG_CONFIG, 15)
-    _adc_range = RWBit(_REG_CONFIG, 4)
+    _reset = RWBit(_CONFIG, 15)
+    _adc_range = RWBit(_CONFIG, 4)
     
     # ADC Configuration register bits
-    _mode = RWBits(4, _REG_ADCCFG, 12)
-    _vbus_conv_time = RWBits(3, _REG_ADCCFG, 9)
-    _vshunt_conv_time = RWBits(3, _REG_ADCCFG, 6)
-    _temp_conv_time = RWBits(3, _REG_ADCCFG, 3)
-    _avg_count = RWBits(3, _REG_ADCCFG, 0)
+    _mode = RWBits(4, _ADCCFG, 12)
+    _vbus_conv_time = RWBits(3, _ADCCFG, 9)
+    _vshunt_conv_time = RWBits(3, _ADCCFG, 6)
+    _temp_conv_time = RWBits(3, _ADCCFG, 3)
+    _avg_count = RWBits(3, _ADCCFG, 0)
     
     # Diagnostic/Alert register bits
-    _alert_latch = RWBit(_REG_DIAGALRT, 15)
-    _alert_conv = RWBit(_REG_DIAGALRT, 14)
-    _alert_polarity = RWBit(_REG_DIAGALRT, 12)
-    _alert_type = RWBits(7, _REG_DIAGALRT, 5)
-    _conversion_ready = ROBit(_REG_DIAGALRT, 1)
-    _alert_flags = ROBits(12, _REG_DIAGALRT, 0)
+    _alert_latch = RWBit(_DIAGALRT, 15)
+    _alert_conv = RWBit(_DIAGALRT, 14)
+    _alert_polarity = RWBit(_DIAGALRT, 12)
+    _alert_type = RWBits(7, _DIAGALRT, 5)
+    _conversion_ready = ROBit(_DIAGALRT, 1)
+    _alert_flags = ROBits(12, _DIAGALRT, 0)
     
     # Measurement registers
-    _raw_dietemp = ROUnaryStruct(_REG_DIETEMP, ">h")
-    _raw_vbus = ROUnaryStruct(_REG_VBUS, ">H")
-    _raw_vshunt = ROUnaryStruct(_REG_VSHUNT, ">h")
-    _raw_current = ROUnaryStruct(_REG_CURRENT, ">h")
-    _raw_power = ROUnaryStruct(_REG_POWER, ">H")
+    _raw_dietemp = ROUnaryStruct(_DIETEMP, ">h")
+    _raw_vbus = ROUnaryStruct(_VBUS, ">H")
+    _raw_vshunt = ROUnaryStruct(_VSHUNT, ">h")
+    _raw_current = ROUnaryStruct(_CURRENT, ">h")
+    _raw_power = ROUnaryStruct(_POWER, ">H")
     
     # Calibration register
-    _shunt_cal = UnaryStruct(_REG_SHUNTCAL, ">H")
+    _shunt_cal = UnaryStruct(_SHUNTCAL, ">H")
     
     # ID registers
-    _manufacturer_id = ROUnaryStruct(_REG_MFG_UID, ">H")
-    _device_id = ROBits(12, _REG_DVC_UID, 4)
+    _manufacturer_id = ROUnaryStruct(_MFG_UID, ">H")
+    _device_id = ROBits(12, _DVC_UID, 4)
 
     def __init__(
         self,
@@ -203,10 +203,13 @@ class INA23X:
         
         self._shunt_res = 0.1  # Default shunt resistance
         self._current_lsb = 0.0
-        
         if not skip_reset:
             self.reset()
             time.sleep(0.002)  # 2ms delay for first measurement
+        self.set_calibration(0.015, 10.0)
+        self.averaging_count = AveragingCount.COUNT_16
+        self.bus_voltage_conv_time = ConversionTime.TIME_150_US
+        self.shunt_voltage_conv_time = ConversionTime.TIME_280_US
 
     def reset(self) -> None:
         """Reset the sensor to default configuration."""
