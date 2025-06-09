@@ -6,6 +6,7 @@
 
 import time
 
+import adafruit_ina228
 import board
 
 import adafruit_ina23x
@@ -18,8 +19,8 @@ ina23x = adafruit_ina23x.INA23X(i2c)
 
 # Configure the sensor (optional - these are just examples)
 # ina23x.set_calibration(0.015, 10.0)  # Default values
-# ina23x.mode = adafruit_ina23x.Mode.CONTINUOUS  # Already default
-# ina23x.averaging_count = adafruit_ina23x.AveragingCount.COUNT_4
+# ina23x.mode = adafruit_ina228.Mode.CONTINUOUS  # Already default
+# ina23x.averaging_count = adafruit_ina228.AveragingCount.COUNT_4
 
 conv_times = [50, 84, 150, 280, 540, 1052, 2074, 4120]
 avg_counts = [1, 4, 16, 64, 128, 256, 512, 1024]

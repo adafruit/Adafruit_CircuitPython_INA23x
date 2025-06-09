@@ -25,7 +25,7 @@ extensions = [
 # Uncomment the below if you use native CircuitPython modules such as
 # digitalio, micropython and busio. List the modules you use. Without it, the
 # autodoc module docs will fail to generate with a warning.
-autodoc_mock_imports = ["digitalio", "busio"]
+autodoc_mock_imports = ["digitalio", "busio", "adafruit_ina228", "adafruit_register"]
 
 autodoc_preserve_defaults = True
 
@@ -33,6 +33,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "BusDevice": ("https://docs.circuitpython.org/projects/busdevice/en/latest/", None),
     "Register": ("https://docs.circuitpython.org/projects/register/en/latest/", None),
+    "INA228": ("https://docs.circuitpython.org/projects/ina228/en/latest/", None),
     "CircuitPython": ("https://docs.circuitpython.org/en/latest/", None),
 }
 
