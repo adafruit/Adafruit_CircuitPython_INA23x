@@ -1,4 +1,3 @@
-# SPDX-FileCopyrightText: 2017 Scott Shawcroft, written for Adafruit Industries
 # SPDX-FileCopyrightText: Copyright (c) 2025 Liz Clark for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
@@ -29,14 +28,16 @@ Implementation Notes
 """
 
 import time
-from micropython import const
+
 from adafruit_bus_device.i2c_device import I2CDevice
+from adafruit_register.i2c_bit import ROBit, RWBit
+from adafruit_register.i2c_bits import ROBits, RWBits
 from adafruit_register.i2c_struct import ROUnaryStruct, UnaryStruct
-from adafruit_register.i2c_bits import RWBits, ROBits
-from adafruit_register.i2c_bit import RWBit, ROBit
+from micropython import const
 
 try:
     import typing  # pylint: disable=unused-import
+
     from busio import I2C
 except ImportError:
     pass
@@ -69,8 +70,10 @@ _INA237_DEVICE_ID = const(0x238)
 _INA238_DEVICE_ID = const(0x238)  # Same as INA237
 _TEXAS_INSTRUMENTS_ID = const(0x5449)
 
+
 class Mode:
     """Operating mode constants for INA23X"""
+
     SHUTDOWN = const(0x00)
     TRIG_BUS = const(0x01)
     TRIG_SHUNT = const(0x02)
@@ -86,21 +89,34 @@ class Mode:
     CONT_TEMP_BUS = const(0x0D)
     CONT_TEMP_SHUNT = const(0x0E)
     CONT_TEMP_BUS_SHUNT = const(0x0F)
-    
+
     # Convenience aliases
     TRIGGERED = TRIG_TEMP_BUS_SHUNT
     CONTINUOUS = CONT_TEMP_BUS_SHUNT
-    
+
     # Valid modes set for validation
     _VALID_MODES = {
-        SHUTDOWN, TRIG_BUS, TRIG_SHUNT, TRIG_BUS_SHUNT,
-        TRIG_TEMP, TRIG_TEMP_BUS, TRIG_TEMP_SHUNT, TRIG_TEMP_BUS_SHUNT,
-        CONT_BUS, CONT_SHUNT, CONT_BUS_SHUNT,
-        CONT_TEMP, CONT_TEMP_BUS, CONT_TEMP_SHUNT, CONT_TEMP_BUS_SHUNT
+        SHUTDOWN,
+        TRIG_BUS,
+        TRIG_SHUNT,
+        TRIG_BUS_SHUNT,
+        TRIG_TEMP,
+        TRIG_TEMP_BUS,
+        TRIG_TEMP_SHUNT,
+        TRIG_TEMP_BUS_SHUNT,
+        CONT_BUS,
+        CONT_SHUNT,
+        CONT_BUS_SHUNT,
+        CONT_TEMP,
+        CONT_TEMP_BUS,
+        CONT_TEMP_SHUNT,
+        CONT_TEMP_BUS_SHUNT,
     }
+
 
 class ConversionTime:
     """Conversion time constants for INA23X"""
+
     TIME_50_US = const(0)
     TIME_84_US = const(1)
     TIME_150_US = const(2)
@@ -109,13 +125,22 @@ class ConversionTime:
     TIME_1052_US = const(5)
     TIME_2074_US = const(6)
     TIME_4120_US = const(7)
-    
-    _VALID_TIMES = {TIME_50_US, TIME_84_US, TIME_150_US, TIME_280_US,
-                    TIME_540_US, TIME_1052_US, TIME_2074_US, TIME_4120_US}
+
+    _VALID_TIMES = {
+        TIME_50_US,
+        TIME_84_US,
+        TIME_150_US,
+        TIME_280_US,
+        TIME_540_US,
+        TIME_1052_US,
+        TIME_2074_US,
+        TIME_4120_US,
+    }
 
 
 class AveragingCount:
     """Averaging count constants for INA23X"""
+
     COUNT_1 = const(0)
     COUNT_4 = const(1)
     COUNT_16 = const(2)
@@ -124,13 +149,22 @@ class AveragingCount:
     COUNT_256 = const(5)
     COUNT_512 = const(6)
     COUNT_1024 = const(7)
-    
-    _VALID_COUNTS = {COUNT_1, COUNT_4, COUNT_16, COUNT_64,
-                     COUNT_128, COUNT_256, COUNT_512, COUNT_1024}
+
+    _VALID_COUNTS = {
+        COUNT_1,
+        COUNT_4,
+        COUNT_16,
+        COUNT_64,
+        COUNT_128,
+        COUNT_256,
+        COUNT_512,
+        COUNT_1024,
+    }
 
 
 class AlertType:
     """Alert type constants for INA23X"""
+
     NONE = const(0x0)
     CONVERSION_READY = const(0x1)
     OVERTEMPERATURE = const(0x2)
@@ -139,68 +173,72 @@ class AlertType:
     OVERVOLTAGE = const(0x10)
     UNDERSHUNT = const(0x20)
     OVERSHUNT = const(0x40)
-    
-    _VALID_TYPES = {NONE, CONVERSION_READY, OVERTEMPERATURE, OVERPOWER,
-                    UNDERVOLTAGE, OVERVOLTAGE, UNDERSHUNT, OVERSHUNT}
+
+    _VALID_TYPES = {
+        NONE,
+        CONVERSION_READY,
+        OVERTEMPERATURE,
+        OVERPOWER,
+        UNDERVOLTAGE,
+        OVERVOLTAGE,
+        UNDERSHUNT,
+        OVERSHUNT,
+    }
 
 
-class INA23X:
+class INA23X:  # noqa: PLR0904
     """Driver for the INA237/INA238 current and power sensor.
-    
+
     :param ~busio.I2C i2c_bus: The I2C bus the INA23X is connected to.
     :param int address: The I2C device address. Defaults to :const:`0x40`
     :param bool skip_reset: Skip resetting the device on init. Defaults to False.
     """
 
     # Configuration register bits
-    _reset = RWBit(_CONFIG, 15)
-    _adc_range = RWBit(_CONFIG, 4)
-    
+    _reset = RWBit(_CONFIG, 15, register_width=2, lsb_first=False)
+    _adc_range = RWBit(_CONFIG, 4, register_width=2, lsb_first=False)
+
     # ADC Configuration register bits
-    _mode = RWBits(4, _ADCCFG, 12)
-    _vbus_conv_time = RWBits(3, _ADCCFG, 9)
-    _vshunt_conv_time = RWBits(3, _ADCCFG, 6)
-    _temp_conv_time = RWBits(3, _ADCCFG, 3)
-    _avg_count = RWBits(3, _ADCCFG, 0)
-    
+    _mode = RWBits(4, _ADCCFG, 12, register_width=2, lsb_first=False)
+    _vbus_conv_time = RWBits(3, _ADCCFG, 9, register_width=2, lsb_first=False)
+    _vshunt_conv_time = RWBits(3, _ADCCFG, 6, register_width=2, lsb_first=False)
+    _temp_conv_time = RWBits(3, _ADCCFG, 3, register_width=2, lsb_first=False)
+    _avg_count = RWBits(3, _ADCCFG, 0, register_width=2, lsb_first=False)
+
     # Diagnostic/Alert register bits
-    _alert_latch = RWBit(_DIAGALRT, 15)
-    _alert_conv = RWBit(_DIAGALRT, 14)
-    _alert_polarity = RWBit(_DIAGALRT, 12)
-    _alert_type = RWBits(7, _DIAGALRT, 5)
-    _conversion_ready = ROBit(_DIAGALRT, 1)
-    _alert_flags = ROBits(12, _DIAGALRT, 0)
-    
+    _alert_latch = RWBit(_DIAGALRT, 15, register_width=2, lsb_first=False)
+    _alert_conv = RWBit(_DIAGALRT, 14, register_width=2, lsb_first=False)
+    _alert_polarity = RWBit(_DIAGALRT, 12, register_width=2, lsb_first=False)
+    _alert_type = RWBits(7, _DIAGALRT, 5, register_width=2, lsb_first=False)
+    _conversion_ready = ROBit(_DIAGALRT, 1, register_width=2, lsb_first=False)
+    _alert_flags = ROBits(12, _DIAGALRT, 0, register_width=2, lsb_first=False)
+
     # Measurement registers
     _raw_dietemp = ROUnaryStruct(_DIETEMP, ">h")
     _raw_vbus = ROUnaryStruct(_VBUS, ">H")
     _raw_vshunt = ROUnaryStruct(_VSHUNT, ">h")
     _raw_current = ROUnaryStruct(_CURRENT, ">h")
     _raw_power = ROUnaryStruct(_POWER, ">H")
-    
+
     # Calibration register
     _shunt_cal = UnaryStruct(_SHUNTCAL, ">H")
-    
+
     # ID registers
     _manufacturer_id = ROUnaryStruct(_MFG_UID, ">H")
-    _device_id = ROBits(12, _DVC_UID, 4)
+    _device_id = ROUnaryStruct(_DVC_UID, ">H")
 
     def __init__(
-        self,
-        i2c_bus: I2C,
-        address: int = _INA23X_DEFAULT_ADDR,
-        skip_reset: bool = False
+        self, i2c_bus: I2C, address: int = _INA23X_DEFAULT_ADDR, skip_reset: bool = False
     ) -> None:
         self.i2c_device = I2CDevice(i2c_bus, address)
-        
+
         # Verify manufacturer ID
         if self._manufacturer_id != _TEXAS_INSTRUMENTS_ID:
             raise ValueError("Failed to find INA237/INA238 - incorrect manufacturer ID")
-        
         # Verify device ID (both INA237 and INA238 use the same ID)
-        if self._device_id not in (_INA237_DEVICE_ID, _INA238_DEVICE_ID):
+        if self.device_id not in {_INA237_DEVICE_ID, _INA238_DEVICE_ID}:
             raise ValueError("Failed to find INA237/INA238 - incorrect device ID")
-        
+
         self._shunt_res = 0.1  # Default shunt resistance
         self._current_lsb = 0.0
         if not skip_reset:
@@ -218,13 +256,18 @@ class INA23X:
         self.mode = Mode.CONTINUOUS
 
     @property
+    def device_id(self) -> int:
+        """Device ID"""
+        return (self._device_id >> 4) & 0xFFF
+
+    @property
     def shunt_resistance(self) -> float:
         """The shunt resistance in ohms."""
         return self._shunt_res
 
-    def set_calibration(self, shunt_res: float = 0.1, max_current: float = 3.2) -> None:
+    def set_calibration(self, shunt_res: float = 0.015, max_current: float = 10.0) -> None:
         """Set the calibration based on shunt resistance and maximum expected current.
-        
+
         :param float shunt_res: Shunt resistance in ohms
         :param float max_current: Maximum expected current in amperes
         """
@@ -237,10 +280,10 @@ class INA23X:
         """Update the shunt calibration register."""
         # Scale factor based on ADC range
         scale = 4 if self._adc_range else 1
-        
+
         # INA237/238 formula: SHUNT_CAL = 819.2 × 10^6 × CURRENT_LSB × RSHUNT × scale
         shunt_cal = int(819.2e6 * self._current_lsb * self._shunt_res * scale)
-        self._shunt_cal = min(shunt_cal, 0xFFFF)  # Ensure it fits in 16 bits
+        self._shunt_cal = min(shunt_cal, 0xFFFF)
 
     @property
     def adc_range(self) -> int:
@@ -249,7 +292,7 @@ class INA23X:
 
     @adc_range.setter
     def adc_range(self, value: int) -> None:
-        if value not in (0, 1):
+        if value not in {0, 1}:
             raise ValueError("ADC range must be 0 or 1")
         self._adc_range = value
         self._update_shunt_cal()
@@ -273,7 +316,9 @@ class INA23X:
     @averaging_count.setter
     def averaging_count(self, value: int) -> None:
         if value not in AveragingCount._VALID_COUNTS:
-            raise ValueError(f"Invalid averaging count {value}. Must be one of the AveragingCount.* constants")
+            raise ValueError(
+                f"Invalid averaging count {value}. Must be one of the AveragingCount.* constants"
+            )
         self._avg_count = value
 
     @property
@@ -284,7 +329,9 @@ class INA23X:
     @bus_voltage_conv_time.setter
     def bus_voltage_conv_time(self, value: int) -> None:
         if value not in ConversionTime._VALID_TIMES:
-            raise ValueError(f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants")
+            raise ValueError(
+                f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants"
+            )
         self._vbus_conv_time = value
 
     @property
@@ -295,7 +342,9 @@ class INA23X:
     @shunt_voltage_conv_time.setter
     def shunt_voltage_conv_time(self, value: int) -> None:
         if value not in ConversionTime._VALID_TIMES:
-            raise ValueError(f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants")
+            raise ValueError(
+                f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants"
+            )
         self._vshunt_conv_time = value
 
     @property
@@ -306,7 +355,9 @@ class INA23X:
     @temp_conv_time.setter
     def temp_conv_time(self, value: int) -> None:
         if value not in ConversionTime._VALID_TIMES:
-            raise ValueError(f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants")
+            raise ValueError(
+                f"Invalid conversion time {value}. Must be one of the ConversionTime.* constants"
+            )
         self._temp_conv_time = value
 
     @property
@@ -352,12 +403,19 @@ class INA23X:
     @alert_type.setter
     def alert_type(self, value: int) -> None:
         # Alert type can be a combination of flags, so we check if all bits are valid
-        valid_mask = (AlertType.CONVERSION_READY | AlertType.OVERTEMPERATURE | 
-                      AlertType.OVERPOWER | AlertType.UNDERVOLTAGE | 
-                      AlertType.OVERVOLTAGE | AlertType.UNDERSHUNT | 
-                      AlertType.OVERSHUNT)
+        valid_mask = (
+            AlertType.CONVERSION_READY
+            | AlertType.OVERTEMPERATURE
+            | AlertType.OVERPOWER
+            | AlertType.UNDERVOLTAGE
+            | AlertType.OVERVOLTAGE
+            | AlertType.UNDERSHUNT
+            | AlertType.OVERSHUNT
+        )
         if value & ~valid_mask:
-            raise ValueError(f"Invalid alert type 0x{value:02X}. Must be a combination of AlertType.* constants")
+            raise ValueError(
+                f"Invalid alert type 0x{value:02X}. Must be a combination of AlertType.* constants"
+            )
         self._alert_type = value
 
     @property
@@ -367,7 +425,7 @@ class INA23X:
 
     @alert_polarity.setter
     def alert_polarity(self, value: int) -> None:
-        if value not in (0, 1):
+        if value not in {0, 1}:
             raise ValueError("Alert polarity must be 0 or 1")
         self._alert_polarity = value
 
@@ -378,7 +436,7 @@ class INA23X:
 
     @alert_latch.setter
     def alert_latch(self, value: int) -> None:
-        if value not in (0, 1):
+        if value not in {0, 1}:
             raise ValueError("Alert latch must be 0 or 1")
         self._alert_latch = value
 
