@@ -24,14 +24,13 @@ Table of Contents
 .. toctree::
     :caption: Tutorials
 
-.. todo:: Add any Learn guide links here. If there are none, then simply delete this todo and leave
-    the toctree above for use later.
+    Adafruit INA23x Learn Guide <https://learn.adafruit.com/adafruit-ina237-dc-current-voltage-power-monitor>
 
 .. toctree::
     :caption: Related Products
 
-.. todo:: Add any product links here. If there are none, then simply delete this todo and leave
-    the toctree above for use later.
+    Adafruit INA237 85V 10A 16-bit DC Current Voltage Power Monitor - STEMMA QT <http://www.adafruit.com/products/6340>
+    Adafruit INA238 DC Current Voltage Power Monitor - STEMMA QT <http://www.adafruit.com/products/6349>
 
 .. toctree::
     :caption: Other Links

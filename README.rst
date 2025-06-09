@@ -31,6 +31,7 @@ This driver depends on:
 * `Adafruit CircuitPython <https://github.com/adafruit/circuitpython>`_
 * `Bus Device <https://github.com/adafruit/Adafruit_CircuitPython_BusDevice>`_
 * `Register <https://github.com/adafruit/Adafruit_CircuitPython_Register>`_
+* `Adafruit CircuitPython INA228 <https://github.com/adafruit/Adafruit_CircuitPython_INA228>`_
 
 Please ensure all dependencies are available on the CircuitPython filesystem.
 This is easily achieved by downloading
@@ -39,6 +40,7 @@ or individual libraries can be installed using
 `circup <https://github.com/adafruit/circup>`_.
 
 `Purchase INA237 from the Adafruit shop <http://www.adafruit.com/products/6340>`_
+
 `Purchase INA238 from the Adafruit shop <http://www.adafruit.com/products/6349>`_
 
 Installing from PyPI
@@ -93,8 +95,24 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    import time
+    import board
+    import adafruit_ina23x
+
+    i2c = board.I2C()
+    ina23x = adafruit_ina23x.INA23X(i2c)
+
+    while True:
+        print(f"Current: {ina23x.current * 1000:.2f} mA")
+        print(f"Bus Voltage: {ina23x.bus_voltage:.2f} V")
+        print(f"Shunt Voltage: {ina23x.shunt_voltage * 1000:.2f} mV")
+        print(f"Power: {ina23x.power * 1000:.2f} mW")
+        print(f"Temperature: {ina23x.die_temperature:.2f} °C")
+        print()
+
+        time.sleep(2)
 
 Documentation
 =============
