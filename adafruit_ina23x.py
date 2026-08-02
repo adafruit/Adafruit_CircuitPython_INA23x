@@ -73,7 +73,9 @@ class INA23X(INA2XX):  # noqa: PLR0904
 
     _raw_vshunt = ROUnaryStruct(0x04, ">h")
     _raw_current = ROUnaryStruct(0x07, ">h")
-    _raw_power = ROUnaryStruct(0x08, ">H")
+
+    # INA23X uses 24-bit register for POWER
+    _raw_power = ROBits(24, 0x08, 0, register_width=3, lsb_first=False)
 
     def __init__(self, i2c_bus: I2C, address: int = 0x40, skip_reset: bool = False) -> None:
         super().__init__(i2c_bus, address, skip_reset)
@@ -132,8 +134,8 @@ class INA23X(INA2XX):  # noqa: PLR0904
     @property
     def power(self) -> float:
         """Power in watts."""
-        # INA237/238 power LSB = 20 × current_lsb
-        return self._raw_power * 20.0 * self._current_lsb
+        # INA237/238 power LSB = 0.2 × current_lsb
+        return self._raw_power * 0.2 * self._current_lsb
 
     @property
     def conversion_ready(self) -> bool:
